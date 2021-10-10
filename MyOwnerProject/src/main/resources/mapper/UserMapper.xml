@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yu.mapper.UserMapper">
+    <insert id="save" parameterType="User" keyProperty="id" useGeneratedKeys="true">
+        insert into t_user values(#{id},#{username},#{password},#{salt})
+    </insert>
+
+    <select id="findByusername" parameterType="String" resultType="User">
+        select * from t_user where username = #{username}
+    </select>
+
+    <resultMap id="userMap" type="User">
+        <id column="uid" property="id"/>
+        <result column="uname" property="username"/>
+        <!--        角色信息-->
+        <collection property="roles" javaType="list" ofType="Role">
+            <id column="rid" property="id"/>
+            <id column="rname" property="name"/>
+        </collection>
+    </resultMap>
+    <select id="findRolesByUsername" parameterType="String" resultMap="userMap">
+        select u.id uid, u.username uname, r.id rid, r.name rname
+        from t_user u
+                 left join t_user_role ur on u.id = ur.userid
+                 left join t_role r on r.id = ur.roleid
+        where u.username = #{username};
+    </select>
+
+
+    <select id="findPermsByRoled" parameterType="int" resultType="Perms">
+        select tp.id, tp.name, tp.url, tr.name from t_role tr
+                                                        left join t_role_perms trp on tr.id = trp.roleid
+                                                        left join t_perms tp on tp.id = trp.permsid
+        where tr.id = #{id};
+    </select>
+
+
+</mapper>
