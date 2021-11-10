@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.book.bookshop.mapper.OrderMapper">
+    <resultMap id="orderAndDetail" type="Order">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="address_id" property="addressId"/>
+        <result column="order_num" property="orderNum"/>
+        <result column="order_status" property="orderStatus"/>
+        <result column="create_date" property="createDate"/>
+
+<!--        用户信息-->
+        <association property="user" javaType="com.book.bookshop.entity.User">
+            <id column="user_id" property="id"/>
+            <result column="user_name" property="username"/>
+            <result column="phone" property="phone"/>
+        </association>
+<!--        地址信息-->
+        <association property="address" javaType="com.book.bookshop.entity.Address">
+            <id column="id" property="id"/>
+            <result column="province" property="province"/>
+            <result column="city" property="city"/>
+            <result column="area" property="area"/>
+            <result column="detail_address" property="detailAddress"/>
+        </association>
+        <collection property="orderItems" ofType="com.book.bookshop.entity.OrderItem">
+            <id column="order_item_id"/>
+            <result column="book_id" property="bookId"/>
+            <result column="order_id" property="orderId"/>
+            <result column="count" property="count"/>
+            <association property="book" javaType="Book">
+                <id column="book_id" property="id"/>
+                <result column="name" property="name"/>
+                <result column="img_url" property="imgUrl"/>
+                <result column="new_price" property="newPrice"/>
+            </association>
+        </collection>
+
+
+    </resultMap>
+    <select id="findOrderAndDetailListByUserId" resultMap="orderAndDetail" parameterType="int">
+        SELECT
+        bo.*,
+        bu.username,
+        bu.phone,
+        ba.province,
+        ba.city,
+        ba.area,
+        ba.detail_address,
+        boi.id order_item_id,
+        boi.book_id,
+        boi.order_id,
+        boi.count,
+        bb.id book_id,
+        bb.img_url,
+        bb.name,
+        bb.new_price
+        FROM
+        bs_order bo,
+        bs_user bu,
+        bs_address ba,
+        bs_order_item boi,
+        bs_book bb
+        <where>
+            <include refid="query_order_where"></include>
+            <if test="begin != null and end != null">
+                limit #{begin},#{end}
+            </if>
+        </where>
+    </select>
+
+    <!--定义查询条件SQL片段-->
+    <sql id="query_order_where">
+        bo.user_id = bu.id
+        AND bo.address_id = ba.id
+        AND bo.id = boi.order_id
+        AND boi.book_id = bb.id
+        <if test="userId != null">
+            and bo.user_id = #{userId}
+        </if>
+        <if test="orderNum != null and orderNum != ''">
+            and bo.order_num = #{orderNum}
+        </if>
+        <if test="tradeStatus != null and tradeStatus != ''">
+            and bo.order_status = #{tradeStatus}
+        </if>
+        <if test="startTime != null">
+            and bo.create_date &gt; #{startTime}
+        </if>
+        <if test="endTime != null">
+            and bo.create_date &lt; #{endTime}
+        </if>
+        <if test="orderBy != null and orderBy != ''">
+            order by bo.create_date ${orderBy}
+        </if>
+    </sql>
+
+    <!--查询记录总数-->
+    <select id="findOrderCountByUser" parameterType="OrderQueryVo" resultType="java.lang.Integer">
+        SELECT
+        count(bo.id)
+        FROM
+        bs_order bo,
+        bs_user bu,
+        bs_address ba,
+        bs_order_item boi,
+        bs_book bb
+        <where>
+            <include refid="query_order_where"></include>
+        </where>
+    </select>
+
+</mapper>

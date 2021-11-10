@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head lang="en">
+	<meta charset="UTF-8">
+	<title>优客书城数据页</title>
+</head>
+<body>
+<div class="table-responsive">
+	<table class="table table-hover table-striped" th:each="order,iter:${orders}">
+		<caption class="text-info">
+			<div class="col-md-10" style="padding-left: 0px;">
+				<input type="checkbox" name="cks">&nbsp;<span th:text="${#calendars.format(order.createDate,'yyyy-MM-dd')}">2017-01-09</span>  订单号:<span th:text="${order.orderNum}">1527600039447022</span>
+			</div>
+			<div class="col-md-2" style="text-align: right;">
+				<a data-toggle="collapse" th:href="@{'#collapseDetail' + ${iter.index}}">订单详情</a>
+			</div>
+		</caption>
+		<thead>
+		<tr th:id="${'collapseDetail' + iter.index}" class="collapse">
+			<td colspan="9">
+				<div class="panel-body">
+					<!--tab选项卡 begin-->
+					<ul class="nav nav-tabs">
+						<li class="active">
+							<a href="#home" th:href="@{'#home'+ ${iter.index}}" data-toggle="tab">联系人信息</a>
+						</li>
+						<li>
+							<a href="#ios" th:href="@{'#ios'+ ${iter.index}}" data-toggle="tab">订单信息</a>
+						</li>
+					</ul>
+					<div class="tab-content">
+						<div class="tab-pane fade in active" id="home" th:id="${'home' + iter.index}">
+							<div class="row">
+								<div>
+									<ul class="nav navbar-collapse" style="line-height:3;">
+										<li class="text-info"><span class="text-success">姓名:</span><span class="text-info" th:text="${order.user.username}">管成功</span></li>
+										<li class="text-info"><span class="text-success">联系方式:</span> <span th:text="${order.user.phone}">15906128572</span></li>
+										<li class="text-info"><span class="text-success">收货地址:</span><span th:text="${order.address.province} + ${order.address.city} +${order.address.area} + ${order.address.detailAddress}">江苏省苏州市姑苏区烽火路80号天创企业3楼</span></li>
+									</ul>
+								</div>
+							</div>
+						</div>
+						<div class="tab-pane fade" id="ios" th:id="${'ios' + iter.index}">
+							<div class="row">
+								<div>
+									<ul class="nav navbar-collapse" style="line-height:3;">
+										<li class="text-info"><span class="text-success">订单编号:</span><span class="text-info" th:text="${order.orderNum}">1527600039447022</span></li>
+										<li class="text-info"><span class="text-success">交易时间:</span><span th:text="${#calendars.format(order.createDate,'yyyy-MM-dd HH:mm:ss')}">01/04/2017 12:52 PM</span></li>
+										<li class="text-info"><span class="text-success">订单总金额:</span><span th:text="${order.totalPrice + '元'}">520.0元</span></li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!--tab选项卡 end-->
+				</div>
+			</td>
+		</tr>
+		<tr class="active">
+			<th>序号</th>
+			<th>图片</th>
+			<th>图片名称</th>
+			<th>单价(元)</th>
+			<th>数量</th>
+			<th>实付款(元)</th>
+			<th>付款日期</th>
+			<th>交易状态</th>
+		</tr>
+		</thead>
+		<tbody>
+		<tr class="warning" th:each="items:${order.orderItems}">
+			<td th:text="${items.book.id}">1001</td>
+			<td><img th:src="@{'/public/' + ${items.book.imgUrl}}" src="images/yuannideqingchunbufumengxiang.jpg"></td>
+			<td th:text="${items.book.name}">愿你的青春不负梦想</td>
+			<td th:text="${items.book.newPrice}">80.0</td>
+			<td th:text="${items.count}">2</td>
+			<td th:text="${items.count * items.book.newPrice}">160.0</td>
+			<td th:text="${#calendars.format(order.createDate,'dd/MM/yyyy')}">01/08/2017</td>
+			<td>未付款</td>
+		</tr>
+		</tbody>
+	</table>
+</div>
+<!--分页begin-->
+<div class="container">
+	<div class="row text-center">
+		<div class="col-md-12">
+			<ul class="pagination">
+				<li><a href="javascript:void(0)" th:onclick="loadData(1)">首页</a></li>
+				<li class="disabled"><a href="javascript:void(0)" th:onclick="loadData([[${pre}]],[[${pageSize}]])">&laquo;</a></li>
+				<li th:each="i:${#numbers.sequence(1,pages)}" th:class="${cur == i} ? 'active' : ''">
+					<a href="javascript:void(0)" th:text="${i}" th:onclick="loadData([[${i}]],[[${pageSize}]])">1</a>
+				</li>
+				<li><a href="javascript:void(0)" th:onclick="loadData([[${next}]],[[${pageSize}]])">&raquo;</a></li>
+				<li><a href="javascript:void(0)" style="border: 1px solid #ddd;" th:onclick="loadData([[${pages}]],[[${pageSize}]])">尾页</a></li>
+				<li><a style="border: 0px;margin-left: 0px;" th:text="${'当前页' + cur + '/' + pages + '总页'}">当前页3/5总页</a></li>
+				<li>
+
+					<div id="search" class="input-group" style="positon:relative;">
+						<input id="inputPage" type="text" class="form-control" placeholder="跳转指定页" />
+						<span class="input-group-btn">
+									<button class="btn btn-info btn-search" th:onclick="goPage([[${pageSize}]])">GO</button>
+								</span>
+					</div>
+				</li>
+				<li><a style="padding-top: 0px;border: 0px;">
+					<label>每页显示:</label>
+					<select id="pageSize" th:value="${pageSize}" class="form-control" style="width: 100px;display: inline;" th:onchange="|loadDataBySize(this)|">
+						<option value="2" th:selected="${pageSize == 2}">2</option>
+						<option value="4" th:selected="${pageSize == 4}">4</option>
+						<option value="6" th:selected="${pageSize == 6}">6</option>
+						<option value="8" th:selected="${pageSize == 8}">8</option>
+					</select>
+					<label>条</label>
+				</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>
+<!--分页end-->
+</body>
+
+</html>
